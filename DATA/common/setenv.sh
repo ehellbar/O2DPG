@@ -4,8 +4,6 @@
 if [[ -z ${SOURCE_GUARD_SETENV:-} ]]; then
 SOURCE_GUARD_SETENV=1
 
-source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" 1>&2 && exit 1; }
-
 # Make sure we can open sufficiently many files / allocate enough memory
 if [[ ${SETENV_NO_ULIMIT:-} != "1" ]]; then
   ulimit -S -n 4096 && ulimit -S -m unlimited && ulimit -S -v unlimited && [[ -z ${GPUTYPE:-} ]] || [[ ${GPUTYPE:-} == "CPU" ]] || ulimit -S -l unlimited
@@ -101,6 +99,9 @@ if [[ -z "${CALIB_DIR:-}" ]];         then CALIB_DIR="/dev/null"; fi           #
 if [[ -z "${EPN2EOS_METAFILES_DIR:-}" ]]; then EPN2EOS_METAFILES_DIR="/dev/null"; fi # Directory where to store epn2eos files metada, /dev/null : skip their writing
 if [[ -z "${DCSCCDBSERVER:-}" ]];  then export DCSCCDBSERVER="http://alio2-cr1-flp199-ib:8083"; fi # server for transvering calibration data to DCS
 if [[ -z "${DCSCCDBSERVER_PERS:-}" ]]; then export DCSCCDBSERVER_PERS="http://alio2-cr1-flp199-ib:8084"; fi # persistent server for transvering calibration data to DCS
+
+# source helper functions here since they use WORKFLOW_PARAMETERS and EPNSYNCMODE defined above
+source $O2DPG_ROOT/DATA/common/gen_topo_helper_functions.sh || { echo "gen_topo_helper_functions.sh failed" 1>&2 && exit 1; }
 
 if [[ $EPNSYNCMODE == 0 ]]; then
   if [[ -z "${SHMSIZE:-}" ]];       then export SHMSIZE=$(( 8 << 30 )); fi    # Size of shared memory for messages
