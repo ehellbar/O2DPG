@@ -192,6 +192,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
     if [[ "${GEN_TOPO_AUTOSCALE_PROCESSES:-}" == "1" && $RUNTYPE == "PHYSICS" ]]; then
       N_MCHCL=$(math_max $((6 * 100 / $RECO_NUM_NODES_WORKFLOW_CMP)) 1)
     fi
+    N_MCHRAWDEC=2
     if [[ "$HIGH_RATE_PP" == "1" ]]; then
       N_TPCITS=$(math_max $((5 * $EPNPIPELINES * $NGPUS / 4)) 1)
       N_TPCENT=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
@@ -208,6 +209,7 @@ elif [[ $EPNPIPELINES != 0 ]]; then
   else
     if [[ $BEAMTYPE == "PbPb" ]]; then
       N_ITSTRK=$(math_max $((2 * $EPNPIPELINES * $NGPUS / 4)) 1)
+      N_MCHRAWDEC=2
     elif [[ $BEAMTYPE == "cosmic" ]]; then
       N_ITSTRK=$(math_max $((4 * $EPNPIPELINES * $NGPUS / 4)) 1)
     fi
@@ -251,7 +253,9 @@ if [[ -z ${EVE_NTH_EVENT:-} ]]; then
     EVE_NTH_EVENT=10
   elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
     EVE_NTH_EVENT=$((4 * 250 / $RECO_NUM_NODES_WORKFLOW_CMP))
-  else # COSMICS / TECHNICALS / ...
+  elif [[ $BEAMTYPE == "cosmic" ]]; then
+    EVE_NTH_EVENT=15
+  else # TECHNICALS / ...
     EVE_NTH_EVENT=1
   fi
   [[ ! -z ${EPN_GLOBAL_SCALING:-} ]] && EVE_NTH_EVENT=$(($EVE_NTH_EVENT * $EPN_GLOBAL_SCALING))
@@ -270,17 +274,24 @@ fi
 
 # Random data sampling fraction for MCH
 if [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
-    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.5}
-    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
-elif [[ "$HIGH_RATE_PP" == "1" ]]; then
+  : ${CUT_RANDOM_FRACTION_MCH:=0.5}
+  : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+  if [[ "$HIGH_RATE_PP" == "1" ]]; then
     : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.7}
-    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+  else
+    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.5}
+  fi
 elif [[ $BEAMTYPE == "PbPb" ]]; then
-    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.9}
-    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+  : ${CUT_RANDOM_FRACTION_MCH:=0.9}
+  : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.9}
+  : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.995}
+elif [[ $BEAMTYPE == "cosmic" ]]; then
+  : ${CUT_RANDOM_FRACTION_MCH:=0.99}
+  : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.99}
+  : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.99}
 else
-    : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.99}
-    : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.99}
+  : ${CUT_RANDOM_FRACTION_MCH_WITH_ITS:=0.99}
+  : ${CUT_RANDOM_FRACTION_MCH_NO_ITS:=0.99}
 fi
 
 #if [[ "$HIGH_RATE_PP" == "1" ]]; then
