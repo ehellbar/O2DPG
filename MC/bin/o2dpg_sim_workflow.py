@@ -1322,6 +1322,7 @@ for tf in range(1, NTIMEFRAMES + 1):
    #<--------- TOF-TPC(-ITS) global track matcher workflow
    toftpcmatchneeds = [TOFRECOtask['name'], TPCRECOtask['name'], ITSTPCMATCHtask['name'], TRDTRACKINGtask2['name']]
    toftracksrcdefault = dpl_option_from_config(anchorConfig, 'o2-tof-matcher-workflow', 'track-sources', default_value='TPC,ITS-TPC,TPC-TRD,ITS-TPC-TRD')
+   tofusefit = option_if_available('o2-tof-matcher-workflow', '--use-fit', envfile=async_envfile)
    TOFTPCMATCHERtask = createTask(name='toftpcmatch_'+str(tf), needs=toftpcmatchneeds, tf=tf, cwd=timeframeworkdir, lab=["RECO"], mem='1000')
    tofmatcher_cmd_parts = [
      '${O2_ROOT}/bin/o2-tof-matcher-workflow',
@@ -1332,9 +1333,11 @@ for tf in range(1, NTIMEFRAMES + 1):
                       'ITSCATrackerParam',
                       'MFTClustererParam',
                       'GPU_rec_tpc',
+                      'ft0tag',
                       'trackTuneParams'], tpcLocalCFreco),
      ' --track-sources ' + toftracksrcdefault,
      (' --combine-devices','')[args.no_combine_dpl_devices],
+     tofusefit,
      tpc_corr_scaling_options,
      tpc_corr_options_mc
    ]
@@ -1951,11 +1954,11 @@ if not args.make_evtpool:
    AOD_merge_task['cmd'] = ' set -e ; [ -f aodmerge_input.txt ] && rm aodmerge_input.txt; '
    AOD_merge_task['cmd'] += ' for i in `seq 1 ' + str(NTIMEFRAMES) + '`; do echo "tf${i}/AO2D.root" >> aodmerge_input.txt; done; '
    AOD_merge_task['cmd'] += ' o2-aod-merger --input aodmerge_input.txt --output AO2D_pre.root'
-   # produce MonaLisa event stat file
-   AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
    # reindex the BC + connected tables because it there could be duplicate BC entries due to the orbit-early treatment
    # see https://its.cern.ch/jira/browse/O2-6227
    AOD_merge_task['cmd'] += ' ; root -q -b -l "${O2DPG_ROOT}/MC/utils/AODBcRewriter.C(\\\"AO2D_pre.root\\\",\\\"AO2D.root\\\")"'
+   # produce MonaLisa event stat file
+   AOD_merge_task['cmd'] += ' ; ${O2DPG_ROOT}/MC/bin/o2dpg_determine_eventstat.py'
    AOD_merge_task['alternative_alienv_package'] = "None" # we want latest software for this step
    workflow['stages'].append(AOD_merge_task)
 
