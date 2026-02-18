@@ -1,7 +1,7 @@
 int External() {
     std::string path{"o2sim_Kine.root"};
 
-    float ratioTrigger = 1./5; // one event triggered out of 5
+    float ratioTrigger = 1./2; // one event triggered out of 5
 
 
     TFile file(path.c_str(), "READ");
@@ -47,16 +47,16 @@ int External() {
     std::cout << "# Events: " << nEvents << "\n";
     std::cout << "# MB events: " << nEventsMB << "\n";
     std::cout << "  sum of weights for MB events: " << sumWeightsMB << "\n";
-    std::cout << "# Jet-jet events " << nEventsJetJet << "\n";
-    std::cout << "  sum of weights jet-jet events: " << sumWeightsJetJet << "\n";
-    std::cout << "# tracks summed over all events (jet-jet + MB): " << sumTracks << "\n";
+    std::cout << "# prompt_photon events " << nEventsJetJet << "\n";
+    std::cout << "  sum of weights prompt_photon events: " << sumWeightsJetJet << "\n";
+    std::cout << "# tracks summed over all events (prompt_photon + MB): " << sumTracks << "\n";
 
     if (nEventsMB < nEvents * (1 - ratioTrigger) * 0.95 || nEventsMB > nEvents * (1 - ratioTrigger) * 1.05) { // we put some tolerance since the number of generated events is small
         std::cerr << "Number of generated MB events different than expected\n";
         return 1;
     }
     if (nEventsJetJet < nEvents * ratioTrigger * 0.95 || nEventsJetJet > nEvents * ratioTrigger * 1.05) {
-        std::cerr << "Number of jet-jet generated events different than expected\n";
+        std::cerr << "Number of prompt_photon generated events different than expected\n";
         return 1;
     }
     if(nEventsMB < sumWeightsMB * 0.95 || nEventsMB > sumWeightsMB * 1.05) {

@@ -205,6 +205,10 @@ if [[ "$ALIEN_JDL_EXTRACTTIMESERIES" == "1" ]]; then
   export ADD_CALIB=1
 fi
 
+if [[ "$ALIEN_JDL_DOTPCTIMEGAINCALIB" == "1" ]]; then
+  export ADD_CALIB=1
+fi
+
 # AOD file size
 if [[ -n "$ALIEN_JDL_AODFILESIZE" ]]; then
   export AOD_FILE_SIZE="$ALIEN_JDL_AODFILESIZE"
@@ -280,16 +284,13 @@ fi
 ln -sf $O2DPG_ROOT/DATA/common/setenv.sh
 ln -sf $O2DPG_ROOT/DATA/common/getCommonArgs.sh
 
-# TFDELAY and throttling
-export TFDELAYSECONDS=40
-if [[ -n "$ALIEN_JDL_TFDELAYSECONDS" ]]; then
-  TFDELAYSECONDS="$ALIEN_JDL_TFDELAYSECONDS"
-# ...otherwise, it depends on whether we have throttling
-elif [[ -n "$ALIEN_JDL_USETHROTTLING" ]]; then
-  TFDELAYSECONDS=1
-  if [[ -n "$ALIEN_JDL_NOTFDELAY" ]]; then
-    TFDELAYSECONDS=0
-  fi
+# throttling and TF-delay
+: ${TFDELAYSECONDS:=0}
+if [[ -n "$ALIEN_JDL_NOTFDELAY" ]] && [[ "$ALIEN_JDL_NOTFDELAY" -gt 0 ]] ; then
+  TFDELAYSECONDS=0
+fi
+  
+if [[ -n "$ALIEN_JDL_USETHROTTLING" ]] && [[ -z "$TIMEFRAME_RATE_LIMIT" ]] ; then
   export TIMEFRAME_RATE_LIMIT=1
 fi
 

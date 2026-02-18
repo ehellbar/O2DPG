@@ -147,8 +147,7 @@ fi
 # other settings
 echo RUN = $RUNNUMBER
 if [[ $RUNNUMBER -ge 521889 ]]; then
-  export ARGS_EXTRA_PROCESS_o2_ctf_reader_workflow+=" --its-digits --mft-digits"
-  export DISABLE_DIGIT_CLUSTER_INPUT="--digits-from-upstream"
+  export ITSMFT_RECO_RERUN_CLUSTERIZER=1
   MAXBCDIFFTOMASKBIAS_ITS="ITSClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables ITS masking
   MAXBCDIFFTOSQUASHBIAS_ITS="ITSClustererParam.maxBCDiffToSquashBias=10" # this explicitly enables ITS squashing
   MAXBCDIFFTOMASKBIAS_MFT="MFTClustererParam.maxBCDiffToMaskBias=-10"    # this explicitly disables MFT masking
@@ -760,6 +759,16 @@ if [[ $ADD_CALIB == "1" ]]; then
   fi
   if [[ $ALIEN_JDL_DOUPLOADSLOCALLY == 1 ]]; then
     export CCDB_POPULATOR_UPLOAD_PATH="file://$PWD"
+  fi
+
+  # enable time gain calibration
+  if [[ $ALIEN_JDL_DOTPCTIMEGAINCALIB == 1 ]]; then
+    echo "Enabling TPC time gain calibration"
+    export CALIB_TPC_TIMEGAIN=1
+    export ARGS_EXTRA_PROCESS_o2_tpc_calibrator_dedx+=" --dump-histograms 1 --min-entries 1" # write full calibration objects for time gain without rejecting low statistics timeslots
+    export ARGS_EXTRA_PROCESS_o2_tpc_miptrack_filter+=" --use-global-tracks"
+    export SCALEEVENTS_TPC_TIMEGAIN=${SCALEEVENTS_TPC_TIMEGAIN:-1} # use all TFs
+    export SCALETRACKS_TPC_TIMEGAIN=${SCALETRACKS_TPC_TIMEGAIN:--1} # use all tracks
   fi
 fi
 
