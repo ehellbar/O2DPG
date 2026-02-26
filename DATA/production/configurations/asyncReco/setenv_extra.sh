@@ -29,11 +29,15 @@ if [[ -z $RUN_IR ]] || [[ -z $RUN_DURATION ]] || [[ -z $RUN_BFIELD ]]; then
   export RUN_BFIELD=`cat BField.txt`
   export RUN_DETECTOR_LIST=`cat DetList.txt`
 fi
+
+BABSI=$(printf "%.0f" "${RUN_BFIELD#-}")
+[[ "$BABSI" -lt 12500 && "$BABSI" -gt 11500 ]] && LOWFIELD=1 || LOWFIELD=0
+
 echo -e "\n"
 echo "Printing run features"
 echo "DETECTOR LIST for current run ($RUNNUMBER) = $RUN_DETECTOR_LIST"
 echo "DURATION for current run ($RUNNUMBER) = $RUN_DURATION"
-echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD"
+echo "B FIELD for current run ($RUNNUMBER) = $RUN_BFIELD (LOWFIELD = ${LOWFIELD})"
 echo "IR for current run ($RUNNUMBER) = $RUN_IR"
 if (( $(echo "$RUN_IR <= 0" | bc -l) )); then
   echo "Changing run IR to 1 Hz, because $RUN_IR makes no sense"
@@ -551,10 +555,14 @@ if [[ $BEAMTYPE == "PbPb" ]]; then
   if [[ -z "$ALIEN_JDL_DISABLE_UPC" || $ALIEN_JDL_DISABLE_UPC != 1 ]]; then
     EXTRA_ITSRECO_CONFIG+=";ITSVertexerParam.nIterations=2;ITSCATrackerParam.doUPCIteration=true;"
   fi
+  if [[ $LOWFIELD == "1" ]]; then
+    EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPt=2.5;"
+  fi
 elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
   EXTRA_ITSRECO_CONFIG="ITSVertexerParam.phiCut=0.5;ITSVertexerParam.clusterContributorsCut=3;ITSVertexerParam.tanLambdaCut=0.2;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.startLayerMask[0]=127;ITSCATrackerParam.startLayerMask[1]=127;ITSCATrackerParam.startLayerMask[2]=127;"
   EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.09;ITSCATrackerParam.minPtIterLgt[10]=0.167;ITSCATrackerParam.minPtIterLgt[11]=0.125;"
+  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.deltaRof=1;ITSVertexerParam.deltaRof=1;" # enable delta-rof tracking
 #  this is to impose old pp pT cuts (overriding hardcoded pbpb24 apass1 settings)
 #  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.05;ITSCATrackerParam.minPtIterLgt[10]=0.05;ITSCATrackerParam.minPtIterLgt[11]=0.05;"
 fi
