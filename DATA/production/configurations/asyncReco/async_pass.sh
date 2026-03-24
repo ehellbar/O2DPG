@@ -445,9 +445,17 @@ if [[ $ASYNC_PASS_NO_OPTIMIZED_DEFAULTS != 1 ]]; then
       fi
     else
       if [[ $BEAMTYPE == "pp" ]]; then
-        export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=pp_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA, 4 gpu per job, pp)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=pp_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, pp)
+        fi
       else  # PbPb
-        export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        if [[ $ALIEN_JDL_SITEARCH =~ ^EPN ]]; then
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_4gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 NUMA 4 gpu per job, PbPb)
+        else
+          export OPTIMIZED_PARALLEL_ASYNC=PbPb_gpu_${ALIEN_JDL_SITEARCH_TMP} # (64 cores, 1 gpu per job, PbPb)
+        fi
       fi
     fi
   else
@@ -484,6 +492,12 @@ WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT=${ALIEN_JDL_WORKFLOWDETECTORSEXCLUDEQC:-}
 # print workflow
 if [[ $ALIEN_JDL_SSPLITWF != "1" ]]; then
   env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list > workflowconfig.log
+  exitcode=$?
+  if [[ $exitcode -ne 0 ]]; then
+    echo "exit code from printing workflow is $exitcode" > validation_error.message
+    echo "exit code from printing workflow is $exitcode"
+    exit $exitcode
+  fi
   # run it
   if [[ "0$RUN_WORKFLOW" != "00" ]]; then
     timeStart=`date +%s`
@@ -524,6 +538,12 @@ else
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=TPC,CTP WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 1) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 1) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -562,6 +582,12 @@ else
       export WORKFLOW_PARAMETERS=$(echo $WORKFLOW_PARAMETERS | sed -e "s/,$i,/,/g" -e "s/^$i,//" -e "s/,$i"'$'"//" -e "s/^$i"'$'"//")
     done
     env DISABLE_ROOT_OUTPUT=0 IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=TPC,$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_MATCHING= ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 2) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 2) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -647,6 +673,12 @@ else
       STEP_3_ROOT_OUTPUT=$SETTING_ROOT_OUTPUT
     fi
     env $STEP_3_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$READ_TRACKS WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$READ_CLUSTERS WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS=HMP WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+    exitcode=$?
+    if [[ $exitcode -ne 0 ]]; then
+      echo "exit code from printing workflow (Step 3) is $exitcode" > validation_error.message
+      echo "exit code from printing workflow (Step 3) is $exitcode"
+      exit $exitcode
+    fi
     # run it
     if [[ "0$RUN_WORKFLOW" != "00" ]]; then
       timeStart=`date +%s`
@@ -685,6 +717,12 @@ else
       WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT+=",CPV"
       echo "QC_JSON_FROM_OUTSIDE = $QC_JSON_FROM_OUTSIDE"
       env $SETTING_ROOT_OUTPUT IS_SIMULATED_DATA=0 WORKFLOWMODE=print TFDELAY=$TFDELAYSECONDS WORKFLOW_DETECTORS=ALL WORKFLOW_DETECTORS_EXCLUDE=$DETECTORS_EXCLUDE WORKFLOW_DETECTORS_USE_GLOBAL_READER_TRACKS=$READ_TRACKS WORKFLOW_DETECTORS_USE_GLOBAL_READER_CLUSTERS=$READ_CLUSTERS WORKFLOW_DETECTORS_EXCLUDE_GLOBAL_READER_TRACKS= WORKFLOW_DETECTORS_EXCLUDE_QC=$WORKFLOW_DETECTORS_EXCLUDE_QC_SCRIPT,$DETECTORS_EXCLUDE ./run-workflow-on-inputlist.sh $INPUT_TYPE list.list >> workflowconfig.log
+      exitcode=$?
+      if [[ $exitcode -ne 0 ]]; then
+        echo "exit code from printing workflow (Step 4) is $exitcode" > validation_error.message
+        echo "exit code from printing workflow (Step 4) is $exitcode"
+        exit $exitcode
+      fi
       # run it
       if [[ "0$RUN_WORKFLOW" != "00" ]]; then
         timeStart=`date +%s`

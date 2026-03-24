@@ -615,7 +615,7 @@ signalprefix='sgn'
 # No vertexing for event pool generation; otherwise the vertex comes from CCDB and later from CollContext
 # (Note that the CCDB case covers the kDiamond case, since this is picked up in GRP_TASK)
 vtxmode_precoll = 'kNoVertex' if args.make_evtpool else 'kCCDB'
-vtxmode_sgngen = 'kCollContext'
+vtxmode_sgngen = 'kNoVertex' if args.make_evtpool else 'kCollContext'
 
 # preproduce the collision context / timeframe structure for all timeframes at once
 precollneeds=[GRP_TASK['name']]
@@ -1809,6 +1809,7 @@ for tf in range(1, NTIMEFRAMES + 1):
       f"--lpmp-prod-tag {args.productionTag}",
       "--anchor-pass ${ALIEN_JDL_LPMANCHORPASSNAME:-unknown}",
       "--anchor-prod ${ALIEN_JDL_LPMANCHORPRODUCTION:-unknown}",
+      "--reco-pass ${ALIEN_JDL_LPMPASSNAME:-unknown}",
       created_by_option,
       "--combine-source-devices" if not args.no_combine_dpl_devices else "",
       "--disable-mc" if args.no_mc_labels else "",

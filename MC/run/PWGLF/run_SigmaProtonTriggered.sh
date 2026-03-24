@@ -15,23 +15,18 @@ NWORKERS=${NWORKERS:-8}
 SIMENGINE=${SIMENGINE:-TGeant4}
 NSIGEVENTS=${NSIGEVENTS:-100}
 NTIMEFRAMES=${NTIMEFRAMES:-1}
-INTRATE=${INTRATE:-50000}
+INTRATE=${INTRATE:-500000}
 SYSTEM=${SYSTEM:-pp}
 ENERGY=${ENERGY:-13600}
-CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorDoubleLambdaTriggered.ini"}
+CFGINIFILE=${CFGINIFILE:-"${O2DPG_ROOT}/MC/config/PWGLF/ini/GeneratorSigmaProtonTriggered.ini"}
 SEED="-seed 1995"
-#[[ ${SPLITID} != "" ]] && SEED="-seed ${SPLITID}" || SEED=""
-
-echo "NWORKERS = $NWORKERS"
 
 # create workflow
 O2_SIM_WORKFLOW=${O2_SIM_WORKFLOW:-"${O2DPG_ROOT}/MC/bin/o2dpg_sim_workflow.py"}
-CFGDECAY="${O2DPG_ROOT}/MC/config/PWGLF/pythia8/decayer/force_lambda_charged_decay.cfg"
-G4CFG="${O2DPG_ROOT}/MC/config/PWGLF/pythia8/decayer/g4_ext_decayer_lambda.in"
 $O2_SIM_WORKFLOW -eCM ${ENERGY} -col ${SYSTEM} -gen external \
         -j ${NWORKERS} \
         -ns ${NSIGEVENTS} -tf ${NTIMEFRAMES} -interactionRate ${INTRATE} \
-        -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6.;;DecayerPythia8.config[1]=${CFGDECAY};DecayerPythia8.showChanged=1;G4.configMacroFile=${G4CFG}" \
+        -confKey "Diamond.width[0]=0.1;Diamond.width[1]=0.1;Diamond.width[2]=6.;" \
         ${SEED} \
         -e ${SIMENGINE} \
         -ini $CFGINIFILE
