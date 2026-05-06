@@ -318,8 +318,8 @@ fi
 if [[ -z ${CALIBDATASPEC_TPCCMV:-} ]]; then
   # TPC
   if [[ $CALIB_TPC_CMV == 1 ]];  then
-	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
-	add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvgroup:TPC/CMVGROUP";
+		add_semicolon_separated CALIBDATASPEC_TPCCMV "cmvorbit:TPC/CMVORBITINFO";
 	fi
 fi
 
