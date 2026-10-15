@@ -314,11 +314,13 @@ Bool_t importParticles() override
             idFirstMother = findKey(mapHfParticles, idFirstMother);
             /// If idFirstMother>=0, the 1st mother is from charm or beauty, i.e. is not a light-flavoured parton
             /// Instead, if idFirstMother==-1 from findKey this means that the first mother was a light-flavoured parton --> not stored in the map
-            if(idFirstMother >=0) {
+            if(idFirstMother >= 0) {
                 /// the 1st mother is from charm or beauty, i.e. is not a light-flavoured parton
                 if(idLastMother != idFirstMotherOrig) {
-                    if(idLastMother != -1) {
-                        /// idLastMother is >= 0
+                    idLastMother = findKey(mapHfParticles, idLastMother);
+                    if(idLastMother < 0) {
+                        // second mother not found, we set it to -1
+                        idLastMother = -1;
                     }
                 } else {
                     /// idLastMother is equal to idFirstMother
@@ -343,15 +345,17 @@ Bool_t importParticles() override
                 const int idMother = findKey(mapHfParticles, idMotherOrig);
                 if(idMother >= 0) {
                     /// this should mean that the mother is from HF, i.e. that we found the correct one
-                    idFirstMother = idMother;
-                    idLastMother = idFirstMother;
+                    if (idFirstMother < 0) {
+                        idFirstMother = idMother;
+                    }
+                    idLastMother = idMother;
                     foundAnyMother = true;
-                    break;
                 }
             }
             // set last mother to -1 if no mother has been found so far
             if (!foundAnyMother) {
                 idLastMother = -1;
+                idFirstMother = -1;
             }
         }
 
@@ -371,10 +375,10 @@ Bool_t importParticles() override
       }
 
       // for debug
-      // LOG(info) << "-----------------------------------------------";
-      // LOG(info) << "============ After HF event " << nEvsHF;
-      // LOG(info) << "Full stack:";
-      // printParticleVector(mParticles);
+    //   LOG(info) << "-----------------------------------------------";
+    //   LOG(info) << "============ After HF event " << nEvsHF;
+    //   LOG(info) << "Full stack:";
+    //   printParticleVector(mParticles);
 
       /// one more event generated, let's update the counter and clear it, to allow the next generation
       nEvsHF++;

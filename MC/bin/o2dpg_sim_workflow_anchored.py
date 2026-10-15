@@ -320,6 +320,27 @@ def retrieve_ITS_RampDuration(ccdbreader, timestamp):
     print("WARNING: ITS ramp duration vector is empty, using 0")
     return 0
 
+def milliseconds_to_orbits(milliseconds):
+    """
+    Number of complete LHC orbits contained in a time span given in milliseconds.
+    Rounded up, so that a span used to skip something is never cut short.
+    """
+    return int(math.ceil(1000. * milliseconds / LHCOrbitMUS))
+
+def shift_anchor_past_ITS_rampup(run_start, first_orbit, orbitsPerTF, ITS_rampup):
+    """
+    Moves the anchoring point past the ITS ramp-up period, in both of its
+    coordinates, and returns the pair (start of run in ms, first orbit).
+    The two have to move together: the timeframes a job simulates are placed by
+    orbit (first orbit plus the production offset), so shifting only the
+    timestamp leaves a job at production offset 0 inside the ramp, where the ITS
+    time-dead map masks every chip.
+    """
+    # round the ramp-up up to whole milliseconds, then to a whole number of timeframes;
+    # the truncated millisecond shift then still ends after the ramp and before the orbit
+    rampupOrbits = -(-milliseconds_to_orbits(math.ceil(ITS_rampup)) // orbitsPerTF) * orbitsPerTF
+    return run_start + int(rampupOrbits * LHCOrbitMUS / 1000.), first_orbit + rampupOrbits
+
 def retrieve_MinBias_CTPScaler_Rate(raw_rate_at, finaltime, trig_eff_arg, NBunches, ColSystem, eCM, run_number = -1):
     """
     Turns the raw CTP counting rate at finaltime (in milliseconds) into the interaction rate for
@@ -590,10 +611,10 @@ def main():
     run_start = GLOparams["SOR"]
     run_end = GLOparams["EOR"]
 
-    # Adjust start of run using ITS ramp-up period
+    # Adjust the anchoring point using the ITS ramp-up period
     ITS_rampup = retrieve_ITS_RampDuration(ccdbreader, run_start)
     print(f"ITS ramp-up time: {ITS_rampup} ms")
-    effective_run_start = run_start + ITS_rampup
+    effective_run_start, effective_first_orbit = shift_anchor_past_ITS_rampup(run_start, GLOparams["FirstOrbit"], GLOparams["OrbitsPerTF"], ITS_rampup)
     mid_run_timestamp = (effective_run_start + run_end) // 2
 
     # --------
@@ -676,6 +697,7 @@ def main():
 
     # this is anchored to
     print ("Determined start-of-run to be: ", effective_run_start)
+    print ("Determined first orbit to be: ", effective_first_orbit)
     print ("Determined end-of-run to be: ", run_end)
     print ("Determined timestamp to be : ", timestamp)
     print ("Determined offset to be : ", prod_offset)
@@ -721,9 +743,9 @@ def main():
     # needs to be handled as further below:
     energyarg = (" -eCM " + str(eCM)) if A1 == A2 else (" -eA " + str(eA) + " -eB " + str(eB))
     forwardargs += " -tf " + str(args.tf) + " --sor " + str(effective_run_start) + " --timestamp " + str(timestamp) + " --production-offset " + str(prod_offset) + " -run " + str(args.run_number) + " --run-anchored --first-orbit "       \
-                   + str(GLOparams["FirstOrbit"]) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + str(energyarg)
+                   + str(effective_first_orbit) + " --orbitsPerTF " + str(GLOparams["OrbitsPerTF"]) + str(energyarg)
     # the following options can be overwritten/influenced from the outside
-    if not '-col' in forwardargs:
+    if not re.search(r'(?<!\S)-col(?=[\s=])', forwardargs):
        forwardargs += ' -col ' + ColSystem
     if not '--readoutDets' in forwardargs:
        forwardargs += ' --readoutDets ' + GLOparams['detList']
