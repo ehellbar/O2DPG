@@ -79,6 +79,16 @@ else
   fi
 fi
 
+if [[ -n $ALIEN_JDL_WORKFLOWDETECTORSRECO ]]; then
+  echo "WORKFLOW_DETECTORS_RECO taken fron JDL, ALIEN_JDL_WORKFLOWDETECTORSRECO = $ALIEN_JDL_WORKFLOWDETECTORSRECO"
+  export WORKFLOW_DETECTORS_RECO="$ALIEN_JDL_WORKFLOWDETECTORSRECO"
+fi
+
+if [[ -n $ALIEN_JDL_WORKFLOWDETECTORSMATCHING ]]; then
+  echo "WORKFLOW_DETECTORS_MATCHING taken fron JDL, ALIEN_JDL_WORKFLOWDETECTORSMATCHING = $ALIEN_JDL_WORKFLOWDETECTORSMATCHING"
+  export WORKFLOW_DETECTORS_MATCHING="$ALIEN_JDL_WORKFLOWDETECTORSMATCHING"
+fi
+
 echo "Final settings for detectors to be processed:"
 echo "WORKFLOW_DETECTORS = $WORKFLOW_DETECTORS"
 echo "WORKFLOW_DETECTORS_EXCLUDE = $WORKFLOW_DETECTORS_EXCLUDE"
@@ -572,6 +582,10 @@ elif [[ $BEAMTYPE == "pp" || $LIGHTNUCLEI == "1" ]]; then
 #  EXTRA_ITSRECO_CONFIG+=";ITSCATrackerParam.minPtIterLgt[0]=0.05;ITSCATrackerParam.minPtIterLgt[1]=0.05;ITSCATrackerParam.minPtIterLgt[2]=0.05;ITSCATrackerParam.minPtIterLgt[3]=0.05;ITSCATrackerParam.minPtIterLgt[4]=0.05;ITSCATrackerParam.minPtIterLgt[5]=0.05;ITSCATrackerParam.minPtIterLgt[6]=0.05;ITSCATrackerParam.minPtIterLgt[7]=0.05;ITSCATrackerParam.minPtIterLgt[8]=0.05;ITSCATrackerParam.minPtIterLgt[9]=0.05;ITSCATrackerParam.minPtIterLgt[10]=0.05;ITSCATrackerParam.minPtIterLgt[11]=0.05;"
 fi
 export CONFIG_EXTRA_PROCESS_o2_its_reco_workflow+=";$MAXBCDIFFTOMASKBIAS_ITS;$MAXBCDIFFTOSQUASHBIAS_ITS;$EXTRA_ITSRECO_CONFIG;"
+
+if [[ -n $ALIEN_JDL_ITSRECOARGS ]] ; then
+  export ARGS_EXTRA_PROCESS_o2_its_reco_workflow+="$ALIEN_JDL_ITSRECOARGS"
+fi
 
 # in the ALIGNLEVEL there was inconsistency between the internal errors of sync_misaligned and ITSEXTRAERR
 if [[ $ALIGNLEVEL != 0 ]]; then
